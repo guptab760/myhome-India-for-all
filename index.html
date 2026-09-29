@@ -29,6 +29,8 @@
     <button class="tab active" data-tab="home">🏠 MyHome</button>
     <button class="tab" data-tab="finance">💰 Salary & EMI</button>
     <button class="tab" data-tab="decisions">🎯 Life Cost</button>
+    <button class="tab" data-tab="liveData">🌐 Live Data</button>
+    <button class="tab" data-tab="marketplace">🔗 Financial Offers</button>
     <button class="tab" data-tab="tools">🧮 Tools</button>
   </nav>
 
@@ -192,7 +194,134 @@
     </div>
   </section>
 
-  <section id="tools" class="tab-panel">
+  
+
+<section id="liveData" class="tab-panel">
+  <div class="card life-hero">
+    <p class="eyebrow">LIVE INTERNET DATA</p>
+    <h2>Check current offers before you decide</h2>
+    <p>MyHome India does not hard-code lender rates or insurance premiums. Click a live source to see the provider's current offers, eligibility and fees.</p>
+    <div class="live-toolbar">
+      <span id="liveChecked">Ready to check live sources</span>
+      <button class="primary small" onclick="openAllLiveSources()">↗ Open relevant live sources</button>
+    </div>
+  </div>
+
+  <div class="live-grid">
+    <div class="card live-card">
+      <h3>🏠 Home Loans</h3>
+      <p>Current lender rates, fees and eligibility.</p>
+      <div class="live-actions">
+        <a href="https://www.paisabazaar.com/home-loan/interest-rates/" target="_blank" rel="noopener">Live Paisabazaar rates ↗</a>
+        <a href="https://sbi.co.in/web/interest-rates/interest-rates/loan-schemes-interest-rates/home-loans-interest-rates-current" target="_blank" rel="noopener">SBI official ↗</a>
+        <a href="https://www.icicibank.com/personal-banking/loans/home-loan/interest-rates" target="_blank" rel="noopener">ICICI official ↗</a>
+      </div>
+    </div>
+    <div class="card live-card">
+      <h3>🚗 Car Loans</h3>
+      <p>Current rates and lender offers.</p>
+      <div class="live-actions">
+        <a href="https://www.paisabazaar.com/car-loan/interest-rates/" target="_blank" rel="noopener">Live Paisabazaar rates ↗</a>
+        <a href="https://sbi.co.in/web/interest-rates/interest-rates/loan-schemes-interest-rates/auto-loans" target="_blank" rel="noopener">SBI official ↗</a>
+        <a href="https://www.icicibank.com/personal-banking/loans/car-loan/interest-rate" target="_blank" rel="noopener">ICICI official ↗</a>
+      </div>
+    </div>
+    <div class="card live-card">
+      <h3>💳 Personal Loans</h3>
+      <p>Compare current rates and processing fees.</p>
+      <div class="live-actions">
+        <a href="https://www.paisabazaar.com/personal-loan/interest-rates/" target="_blank" rel="noopener">Live Paisabazaar rates ↗</a>
+        <a href="https://www.icicibank.com/personal-banking/loans/personal-loan/personal-loan-interest-rates" target="_blank" rel="noopener">ICICI official ↗</a>
+        <a href="https://sbi.co.in/web/interest-rates/interest-rates/loan-schemes-interest-rates" target="_blank" rel="noopener">SBI official ↗</a>
+      </div>
+    </div>
+    <div class="card live-card">
+      <h3>🛡️ Life / Term Insurance</h3>
+      <p>Get live quotes using your age, cover and policy term.</p>
+      <div class="live-actions">
+        <a href="https://www.policybazaar.com/life-insurance/term-insurance/" target="_blank" rel="noopener">Live Policybazaar quotes ↗</a>
+        <a href="https://www.policybazaar.com/life-insurance/term-insurance/best-term-insurance-plans-in-india/" target="_blank" rel="noopener">Compare term plans ↗</a>
+      </div>
+    </div>
+    <div class="card live-card">
+      <h3>🚘 Car Insurance</h3>
+      <p>Get current premiums based on vehicle and coverage.</p>
+      <div class="live-actions">
+        <a href="https://www.policybazaar.com/motor-insurance/car-insurance/compare/" target="_blank" rel="noopener">Live car insurance comparison ↗</a>
+        <a href="https://www.policybazaar.com/motor-insurance/car-insurance/" target="_blank" rel="noopener">Car insurance quotes ↗</a>
+      </div>
+    </div>
+    <div class="card live-card">
+      <h3>📈 Investments / SIP</h3>
+      <p>Use live fund comparison and SIP tools rather than stale return assumptions.</p>
+      <div class="live-actions">
+        <a href="https://www.paisabazaar.com/mutual-funds/" target="_blank" rel="noopener">Live mutual-fund comparison ↗</a>
+        <a href="https://www.paisabazaar.com/sip-calculator/" target="_blank" rel="noopener">Live SIP calculator ↗</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>How MyHome uses live data</h3>
+    <p class="muted">The app keeps your personal calculations local. It does not pretend a hard-coded interest rate is current. Live lender/insurance/fund data is opened from the source website when you click. This avoids showing stale rates and lets the provider apply your actual eligibility.</p>
+    <p class="muted"><b>Next stage:</b> if you want rates displayed inside MyHome itself, we can add a small serverless API layer (Cloudflare Worker/AWS Lambda) that fetches approved APIs or source feeds and refreshes the data automatically.</p>
+  </div>
+</section>
+
+<section id="marketplace" class="tab-panel">
+  <div class="card life-hero">
+    <p class="eyebrow">SMART FINANCIAL MARKETPLACE</p>
+    <h2>Recommendations & comparison links</h2>
+    <p>When your numbers indicate a need for protection, investment or borrowing, MyHome India can show comparison and lender links. Rates and products change, so verify the current offer before applying.</p>
+  </div>
+
+  <div class="card">
+    <div class="section-title"><h3>💰 Excess Investment Planner</h3><span class="badge">Goal + risk first</span></div>
+    <div class="grid three">
+      <label>Monthly surplus<input id="miSurplus" type="number" placeholder="50000" oninput="updateMarketplace()"></label>
+      <label>Emergency fund (months)<input id="miEmergency" type="number" placeholder="6" oninput="updateMarketplace()"></label>
+      <label>Investment horizon<select id="miHorizon" onchange="updateMarketplace()"><option value="3">Under 3 years</option><option value="7" selected>3–7 years</option><option value="12">7+ years</option></select></label>
+    </div>
+    <div id="investmentAdvice" class="market-result"></div>
+    <div class="link-grid">
+      <a class="market-link" href="https://www.paisabazaar.com/mutual-funds/" target="_blank" rel="noopener">Compare Mutual Funds — Paisabazaar</a>
+      <a class="market-link" href="https://www.paisabazaar.com/sip-calculator/" target="_blank" rel="noopener">Plan SIP — Paisabazaar</a>
+      <a class="market-link" href="https://www.policybazaar.com/" target="_blank" rel="noopener">Compare Investment / Insurance — Policybazaar</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="section-title"><h3>🛡️ Insurance Recommendations</h3><span class="badge">If you add a policy need</span></div>
+    <div class="grid three">
+      <label>Life cover needed?<select id="insLife" onchange="updateMarketplace()"><option value="no">No</option><option value="yes">Yes</option></select></label>
+      <label>Car insurance needed?<select id="insCar" onchange="updateMarketplace()"><option value="no">No</option><option value="yes">Yes</option></select></label>
+      <label>Health / family cover?<select id="insHealth" onchange="updateMarketplace()"><option value="no">No</option><option value="yes">Yes</option></select></label>
+    </div>
+    <div id="insuranceAdvice" class="market-result"></div>
+    <div class="link-grid">
+      <a class="market-link" href="https://www.policybazaar.com/life-insurance/term-insurance/" target="_blank" rel="noopener">Compare Term / Life Insurance</a>
+      <a class="market-link" href="https://www.policybazaar.com/motor-insurance/car-insurance/compare/" target="_blank" rel="noopener">Compare Car Insurance</a>
+      <a class="market-link" href="https://www.policybazaar.com/" target="_blank" rel="noopener">Compare Health & Other Insurance</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="section-title"><h3>🏦 Lower-Rate Loan Comparison</h3><span class="badge">Indicative rates</span></div>
+    <p class="muted">These are comparison routes, not guaranteed offers. The actual rate depends on credit score, income, employer/profile, loan amount, tenure and lender rules.</p>
+    <div class="loan-links">
+      <div class="loan-card"><h4>🏠 Home Loan</h4><p>Compare 25+ lenders or check bank rates directly.</p><a href="https://www.paisabazaar.com/home-loan/interest-rates/" target="_blank" rel="noopener">Paisabazaar comparison</a><a href="https://sbi.co.in/web/interest-rates/interest-rates/loan-schemes-interest-rates/home-loans-interest-rates-current" target="_blank" rel="noopener">SBI rates</a><a href="https://www.hdfc.com/checklist/home-loan-interest-rates" target="_blank" rel="noopener">HDFC home loan</a><a href="https://www.icicibank.com/personal-banking/loans/home-loan/interest-rates" target="_blank" rel="noopener">ICICI home loan</a></div>
+      <div class="loan-card"><h4>🚗 Car Loan</h4><p>Compare current car-loan offers before accepting dealer finance.</p><a href="https://www.paisabazaar.com/car-loan/interest-rates/" target="_blank" rel="noopener">Paisabazaar comparison</a><a href="https://sbi.co.in/web/interest-rates/interest-rates/loan-schemes-interest-rates/auto-loans" target="_blank" rel="noopener">SBI auto loan rates</a><a href="https://www.hdfcbank.com/personal/borrow/popular-loans/new-car-loan/fees-and-charges" target="_blank" rel="noopener">HDFC car loan</a><a href="https://www.icicibank.com/personal-banking/loans/car-loan/interest-rate" target="_blank" rel="noopener">ICICI car loan</a></div>
+      <div class="loan-card"><h4>💳 Personal Loan</h4><p>Personal loans are usually more expensive; compare total cost, not just the headline rate.</p><a href="https://www.paisabazaar.com/personal-loan/interest-rates/" target="_blank" rel="noopener">Paisabazaar comparison</a><a href="https://sbi.co.in/web/interest-rates/interest-rates/loan-schemes-interest-rates" target="_blank" rel="noopener">SBI loan rates</a><a href="https://www.icicibank.com/personal-banking/loans/personal-loan/personal-loan-interest-rates" target="_blank" rel="noopener">ICICI personal loan</a><a href="https://www.hdfc.bank.in/personal-loan/emi-calculator" target="_blank" rel="noopener">HDFC personal loan calculator</a></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="section-title"><h3>⚠️ MyHome Rule</h3></div>
+    <p class="muted">MyHome India should not label one fund, insurer or lender as universally “best”. It should show the current comparison route, explain why an option may fit the user's numbers, and let the user verify the final terms.</p>
+  </div>
+</section>
+
+<section id="tools" class="tab-panel">
     <div class="grid three">
       <div class="card tool"><div class="tool-icon">🏠</div><h3>Rent vs Buy</h3><p>Compare monthly rent with estimated home-loan costs.</p><button class="secondary" onclick="openModal('rentModal')">Open Tool</button></div>
       <div class="card tool"><div class="tool-icon">👩‍🍳</div><h3>Maid Salary</h3><p>Calculate salary after unpaid leave and advances.</p><button class="secondary" onclick="openModal('maidModal')">Open Tool</button></div>

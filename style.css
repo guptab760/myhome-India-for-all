@@ -17,3 +17,11 @@ body > *:not(.money-bg){position:relative;z-index:1}.card{box-shadow:0 8px 24px 
 .life-hero{background:linear-gradient(135deg,#0d527d 0%,#1976d2 55%,#42a5f5 100%);position:relative;overflow:hidden}.life-hero:after{content:"₹";position:absolute;right:5%;top:-45px;font-size:240px;line-height:1;color:rgba(255,255,255,.09);font-weight:900;transform:rotate(12deg)}
 .primary{background:linear-gradient(90deg,#1976d2,#2196f3);box-shadow:0 5px 14px rgba(25,118,210,.20)}.primary:hover{filter:brightness(1.05)}.make-result{border-left:5px solid #ff9800}.cut-plan{border-left:5px solid #ff9800}.positive,.negative{font-weight:900}
 @media(max-width:650px){.status-legend{justify-content:flex-start;flex-wrap:wrap}}
+
+.market-result{margin-top:14px;padding:16px;border-radius:12px;background:#f5f9ff;border-left:5px solid #1976d2;line-height:1.6}.dark .market-result{background:#202733}
+.link-grid,.loan-links{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:14px}.market-link,.loan-card{padding:14px;border-radius:12px;background:#fff;border:1px solid #dce5ef;text-decoration:none;color:#155b91;font-weight:800}.dark .market-link,.dark .loan-card{background:#202733;border-color:#344052;color:#75bfff}.loan-card h4{margin:0 0 6px;color:#1f2937}.dark .loan-card h4{color:#fff}.loan-card p{font-size:13px;color:#718096}.loan-card a{display:block;margin:8px 0;color:#1976d2;font-weight:800;text-decoration:none}.dark .loan-card a{color:#75bfff}
+@media(max-width:800px){.link-grid,.loan-links{grid-template-columns:1fr}}
+
+.live-toolbar{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-top:18px;flex-wrap:wrap}.small{padding:10px 15px!important;font-size:13px!important}
+.live-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:16px}.live-card{border-top:3px solid #1976d2}.live-card h3{margin-top:0}.live-actions a{display:block;padding:9px 0;color:#1976d2;font-weight:800;text-decoration:none;border-top:1px solid #e7edf4}.dark .live-actions a{color:#75bfff;border-color:#344052}.live-actions a:first-child{border-top:0}
+@media(max-width:900px){.live-grid{grid-template-columns:1fr 1fr}}@media(max-width:600px){.live-grid{grid-template-columns:1fr}}

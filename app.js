@@ -242,3 +242,48 @@ function updateAdvice(){
  actions.push(`Keep annual and quarterly costs in the monthly budget. This prevents school fees, insurance, travel and festival spending from appearing as unexpected shocks.`);
  document.getElementById("maintenancePlan").innerHTML=`<h4>🛠️ How to maintain expenditure</h4><ul>${actions.map(a=>`<li>${a}</li>`).join("")}</ul><p><b>Personalised cut-down logic:</b> Use <b>Can I Afford This?</b> above when considering a major purchase. If it creates a deficit, MyHome India will use your entered discretionary categories to identify potential reductions rather than applying a generic percentage.</p>`;
 }
+
+function updateMarketplace(){
+  const surplus=Number(document.getElementById("miSurplus").value)||0;
+  const emergency=Number(document.getElementById("miEmergency").value)||0;
+  const horizon=Number(document.getElementById("miHorizon").value)||7;
+  let advice=[];
+  if(surplus<=0){
+    advice.push("First priority: restore a positive monthly surplus before increasing long-term investments.");
+  }else if(emergency<3){
+    advice.push("Build a cash emergency reserve before directing all excess cash into market-linked investments.");
+  }else if(emergency<6){
+    advice.push("Consider building the emergency reserve toward roughly 6 months of essential expenses before taking higher investment risk.");
+  }else{
+    advice.push("You have entered a stronger emergency-fund position. Excess cash can be allocated according to goal, time horizon and risk tolerance.");
+  }
+  if(horizon<3) advice.push("For goals under 3 years, consider lower-volatility options rather than assuming equity-market returns.");
+  else if(horizon<7) advice.push("For a 3–7 year goal, compare diversified options and keep the risk aligned with the date you need the money.");
+  else advice.push("For 7+ year goals, diversified mutual-fund categories may be considered if your risk tolerance supports market volatility.");
+  document.getElementById("investmentAdvice").innerHTML="<b>MyHome guidance</b><ul>"+advice.map(x=>"<li>"+esc(x)+"</li>").join("")+"</ul>";
+  const life=document.getElementById("insLife").value, car=document.getElementById("insCar").value, health=document.getElementById("insHealth").value;
+  let ins=[];
+  if(life==="yes") ins.push("Compare term-life cover based on income replacement, outstanding loans and family goals; don't choose on premium alone.");
+  if(car==="yes") ins.push("Compare IDV, own-damage cover, deductibles, add-ons and claim/service network—not just the lowest premium.");
+  if(health==="yes") ins.push("Compare family coverage, room-rent rules, waiting periods, exclusions, co-pay and restoration benefits.");
+  if(!ins.length) ins.push("Select a protection need above to see what to compare.");
+  document.getElementById("insuranceAdvice").innerHTML="<b>What to compare</b><ul>"+ins.map(x=>"<li>"+esc(x)+"</li>").join("")+"</ul>";
+}
+
+function openAllLiveSources(){
+  const urls=[
+    "https://www.paisabazaar.com/home-loan/interest-rates/",
+    "https://www.paisabazaar.com/car-loan/interest-rates/",
+    "https://www.paisabazaar.com/personal-loan/interest-rates/",
+    "https://www.policybazaar.com/life-insurance/term-insurance/",
+    "https://www.policybazaar.com/motor-insurance/car-insurance/compare/",
+    "https://www.paisabazaar.com/mutual-funds/"
+  ];
+  urls.forEach(u=>window.open(u,"_blank","noopener"));
+  const el=document.getElementById("liveChecked");
+  if(el) el.textContent="Live sources opened: "+new Date().toLocaleString("en-IN");
+}
+document.addEventListener("DOMContentLoaded",()=>{
+  const el=document.getElementById("liveChecked");
+  if(el) el.textContent="Live sources available • "+new Date().toLocaleString("en-IN");
+});
