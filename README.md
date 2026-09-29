@@ -42,3 +42,13 @@ The app currently stores data in the user's browser using `localStorage`; there 
 - If the gap remains, suggests changing purchase price/down payment/financing/timing rather than assuming all discretionary expenses can be cut.
 
 - Make It Possible scenario sliders for price, down payment and tenure.
+
+## v5 financial planning features
+- Inflation assumption and India CPI reference
+- Salary hike assumption
+- Expenditure-growth assumption with optional 3/6-month trend inputs
+- Five-year income vs family-cost projection
+- Household spending-maintenance advice based on the user's numbers
+- Guidance to prevent lifestyle inflation from absorbing salary increases
+
+Official India CPI reference used for the default assumption: July 2026 CPI 4.45%; food inflation 5.52% (MoSPI/PIB).

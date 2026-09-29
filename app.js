@@ -1,7 +1,7 @@
 const KEY="myhomeindia_v1";
 let data=JSON.parse(localStorage.getItem(KEY)||'{"income":0,"otherIncome":0,"expenses":[],"emis":[],"reminders":[],"help":[]}');
 const money=n=>"₹"+Number(n||0).toLocaleString("en-IN",{maximumFractionDigits:0});
-const save=()=>{localStorage.setItem(KEY,JSON.stringify(data));render()};
+const save=()=>{localStorage.setItem(KEY,JSON.stringify(data));render();setTimeout(()=>{try{updateAdvice()}catch(e){}},0)};
 function toast(t){const e=document.getElementById("toast");e.textContent=t;e.style.display="block";setTimeout(()=>e.style.display="none",1800)}
 function openModal(id){document.getElementById(id).classList.add("open")}
 function closeModal(id){document.getElementById(id).classList.remove("open")}
@@ -45,6 +45,7 @@ function simulateLoan(){let p=+simPrincipal.value||0,annual=+simRate.value||0,n=
 
 function clearAll(){if(confirm("Delete all MyHome India data from this browser?")){localStorage.removeItem(KEY);location.reload()}}
 render();
+setTimeout(()=>{try{updateAdvice()}catch(e){}},0);
 function baseMonthly(){return data.expenses.reduce((s,x)=>s+Number(x.amount),0)+data.emis.reduce((s,x)=>s+Number(x.emi),0)}
 function calculateTrueCost(){
  const quarterly=+document.getElementById("qSchool").value||0;
@@ -57,6 +58,7 @@ function calculateTrueCost(){
  document.getElementById("bufferMonths").textContent=surplus>0?(Math.max(0,Number(data.emergencyFund||0)/surplus).toFixed(1)+" mo"):"—";
  document.getElementById("lifeSnapshot").innerHTML=`<div><span>Regular monthly costs</span><b>${money(baseMonthly())}</b></div><div><span>Quarterly costs / month</span><b>${money(quarterly/3)}</b></div><div><span>Annual costs / month</span><b>${money(monthlyAnnual)}</b></div><div><span>True monthly surplus</span><b class="${surplus>=0?"positive":"negative"}">${money(surplus)}</b></div>`;
  renderLifeCalendar(quarterly,annual);
+ updateAdvice();
 }
 function renderLifeCalendar(quarterly,annual){
  const months=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
@@ -186,4 +188,57 @@ function updateMakePossible(){
    <p>${after>=0
      ? "This scenario fits the current monthly cash-flow model. Keep a safety buffer rather than using the entire surplus."
      : "This scenario does not fit yet. Try increasing the down payment, extending tenure, reducing the purchase price, or use the expense-cutting suggestions above."}</p>`;
+}
+
+function updateAdvice(){
+ const base=Number(document.getElementById("trueCost")?.textContent?.replace(/[^0-9.-]/g,"")||0);
+ const currentCost=base||baseMonthly();
+ const income=Number(data.income)+Number(data.otherIncome);
+ const inflation=Math.max(0,+document.getElementById("adInflation").value||0);
+ const salaryHike=Math.max(0,+document.getElementById("adSalaryHike").value||0);
+ let expenseGrowth=Math.max(0,+document.getElementById("adExpenseGrowth").value||0);
+ const last=+document.getElementById("adLastMonth").value||0;
+ const three=+document.getElementById("adThreeMonth").value||0;
+ const six=+document.getElementById("adSixMonth").value||0;
+ let trendText="Using your planned expenditure-growth assumption.";
+ if(last>0 && six>0){
+   const months=6;
+   const actual=Math.pow(last/six,1/months)-1;
+   if(Number.isFinite(actual)) expenseGrowth=Math.max(0,actual*100),trendText=`Your entered 6-month expenditure trend is ${actual>=0?"up":"down"} ${Math.abs(actual*100).toFixed(1)}% annualised (approx.).`;
+ }else if(last>0 && three>0){
+   const actual=Math.pow(last/three,1/3)-1;
+   if(Number.isFinite(actual)) expenseGrowth=Math.max(0,actual*100),trendText=`Your entered 3-month expenditure trend is ${actual>=0?"up":"down"} ${Math.abs(actual*100).toFixed(1)}% annualised (approx.).`;
+ }
+ const expenseRate=Math.max(inflation,expenseGrowth);
+ const years=5;
+ let proj=[];
+ for(let y=0;y<=years;y++){
+   const c=currentCost*Math.pow(1+expenseRate/100,y);
+   const inc=income*Math.pow(1+salaryHike/100,y);
+   proj.push({y,c,inc,s:inc-c});
+ }
+ const gapNow=income-currentCost;
+ const gap5=proj[5].s;
+ const costGrowth=Math.pow(1+expenseRate/100,5)-1;
+ const incomeGrowth=Math.pow(1+salaryHike/100,5)-1;
+ const marginNow=income?gapNow/income*100:0;
+ const margin5=proj[5].inc?gap5/proj[5].inc*100:0;
+ let status, headline;
+ if(income<=0){status="yellow";headline="Enter salary/income to generate the household advice."}
+ else if(gapNow<0){status="red";headline=`Your current model is short by ${money(Math.abs(gapNow))} per month. The first goal is to restore a positive monthly surplus before adding new lifestyle costs.`}
+ else if(salaryHike>expenseRate+1){status="green";headline="Your assumed salary growth is ahead of expenditure growth. Protect that advantage by preventing lifestyle costs from rising at the same pace as income."}
+ else {status="yellow";headline="Your projected income and expenditure are growing at similar rates. A spending ceiling is important so future raises do not get absorbed by lifestyle inflation."}
+ document.getElementById("adviceSummary").innerHTML=`<b>${status==="green"?"🟢":status==="yellow"?"🟡":"🔴"} ${headline}</b><br><br><b>Current surplus:</b> ${money(gapNow)} (${marginNow.toFixed(1)}% of income)<br><b>Assumed expenditure growth:</b> ${expenseRate.toFixed(1)}% p.a. &nbsp; <b>Salary growth:</b> ${salaryHike.toFixed(1)}% p.a.<br><b>5-year income growth:</b> ${(incomeGrowth*100).toFixed(1)}% &nbsp; <b>5-year cost growth:</b> ${(costGrowth*100).toFixed(1)}%<br><b>5-year projected monthly surplus:</b> <span class="${gap5>=0?"trend-down":"trend-up"}">${money(gap5)}</span><br><small>${trendText}</small>`;
+ document.getElementById("projectionGrid").innerHTML=proj.map(p=>`<div class="projection-card"><span class="year">Year ${p.y}</span><small>Projected income</small><b>${money(p.inc)}</b><small>Projected family cost</small><b>${money(p.c)}</b><small>Surplus</small><b class="${p.s>=0?"trend-down":"trend-up"}">${money(p.s)}</b></div>`).join("");
+ const gap=Math.max(0,-gapNow);
+ const targetSurplus=Math.max(0,income*0.15);
+ const neededToTarget=Math.max(0,targetSurplus-gapNow);
+ let actions=[];
+ if(gap>0) actions.push(`Restore at least ${money(gap)} per month of positive cash flow before taking on new discretionary commitments.`);
+ if(neededToTarget>0) actions.push(`Target an initial monthly surplus of about ${money(targetSurplus)} (15% of income in this model), requiring roughly ${money(neededToTarget)} more monthly room.`);
+ if(salaryHike<=expenseRate) actions.push(`When salary rises, cap regular lifestyle-expense growth at about ${Math.min(expenseRate,salaryHike-1<0?0:salaryHike-1).toFixed(1)}% rather than allowing expenses to track the full raise.`);
+ actions.push(`Treat at least part of every salary increase as unavailable for lifestyle spending: direct it first toward emergency reserves, debt reduction or long-term goals.`);
+ actions.push(`Review discretionary categories monthly; if a category rises faster than your household inflation assumption for two consecutive months, set a spending cap for it.`);
+ actions.push(`Keep annual and quarterly costs in the monthly budget. This prevents school fees, insurance, travel and festival spending from appearing as unexpected shocks.`);
+ document.getElementById("maintenancePlan").innerHTML=`<h4>🛠️ How to maintain expenditure</h4><ul>${actions.map(a=>`<li>${a}</li>`).join("")}</ul><p><b>Personalised cut-down logic:</b> Use <b>Can I Afford This?</b> above when considering a major purchase. If it creates a deficit, MyHome India will use your entered discretionary categories to identify potential reductions rather than applying a generic percentage.</p>`;
 }
