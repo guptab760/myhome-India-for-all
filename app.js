@@ -1,7 +1,19 @@
 const KEY="myhomeindia_v1";
-let data=JSON.parse(localStorage.getItem(KEY)||'{"income":0,"otherIncome":0,"expenses":[],"emis":[],"reminders":[],"help":[]}');
+const MONTH_KEY="myhomeindia_monthly_v1";
+const blankData=()=>({income:0,otherIncome:0,expenses:[],emis:[],reminders:[],help:[],annualCosts:{qSchool:0,aInsurance:0,aTravel:0,aMaintenance:0,aFestival:0,aOther:0}});
+const monthNow=()=>{const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")};
+const monthLabel=k=>{const [y,m]=k.split("-");return new Date(Number(y),Number(m)-1,1).toLocaleDateString("en-IN",{month:"long",year:"numeric"})};
+let monthlyStore=JSON.parse(localStorage.getItem(MONTH_KEY)||"null");
+if(!monthlyStore||!monthlyStore.months){
+  const legacy=JSON.parse(localStorage.getItem(KEY)||"null")||blankData();
+  monthlyStore={activeMonth:monthNow(),months:{[monthNow()]:{...blankData(),...legacy,annualCosts:{...blankData().annualCosts,...(legacy.annualCosts||{})}}}};
+}
+let activeMonth=monthlyStore.activeMonth||monthNow();
+if(!monthlyStore.months[activeMonth]) monthlyStore.months[activeMonth]=blankData();
+let data=monthlyStore.months[activeMonth];
 const money=n=>"₹"+Number(n||0).toLocaleString("en-IN",{maximumFractionDigits:0});
-const save=()=>{localStorage.setItem(KEY,JSON.stringify(data));render();setTimeout(()=>{try{updateAdvice()}catch(e){}},0)};
+const saveStore=()=>{monthlyStore.activeMonth=activeMonth;monthlyStore.months[activeMonth]=data;localStorage.setItem(MONTH_KEY,JSON.stringify(monthlyStore));localStorage.setItem(KEY,JSON.stringify(data));};
+const save=()=>{saveStore();render();setTimeout(()=>{try{updateAdvice()}catch(e){}},0)};
 function toast(t){const e=document.getElementById("toast");e.textContent=t;e.style.display="block";setTimeout(()=>e.style.display="none",1800)}
 function openModal(id){document.getElementById(id).classList.add("open")}
 function closeModal(id){document.getElementById(id).classList.remove("open")}
@@ -9,7 +21,46 @@ document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{document.querySelect
 document.getElementById("themeBtn").onclick=()=>{document.body.classList.toggle("dark");localStorage.setItem("myhome_theme",document.body.classList.contains("dark")?"dark":"light")};
 if(localStorage.getItem("myhome_theme")==="dark")document.body.classList.add("dark");
 
+function ensureMonth(k){if(!monthlyStore.months[k]) monthlyStore.months[k]=blankData(); return monthlyStore.months[k]}
+function switchMonth(k){if(!k||k===activeMonth)return;saveStore();activeMonth=k;data=ensureMonth(k);monthlyStore.activeMonth=k;render();toast("Switched to "+monthLabel(k));}
+function saveCurrentMonth(){saveStore();render();toast(monthLabel(activeMonth)+" saved")}
+function createNewMonth(){
+  const next=prompt("Enter month as YYYY-MM",nextMonthKey(activeMonth));
+  if(!next||!/^[0-9]{4}-[0-9]{2}$/.test(next))return;
+  if(monthlyStore.months[next]){switchMonth(next);return;}
+  monthlyStore.months[next]=blankData();activeMonth=next;data=monthlyStore.months[next];saveStore();render();toast("New blank month created")
+}
+function nextMonthKey(k){const [y,m]=k.split("-").map(Number);const d=new Date(y,m,1);return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")}
+function copyMonthData(){
+  const source=document.getElementById("copySourceMonth").value;
+  if(!source||source===activeMonth)return toast("Choose another source month");
+  const src=monthlyStore.months[source];
+  if(!src)return toast("Source month not found");
+  data.expenses=JSON.parse(JSON.stringify(src.expenses||[]));
+  data.emis=JSON.parse(JSON.stringify(src.emis||[]));
+  save();toast("Expenses & liabilities copied from "+monthLabel(source));
+}
+function monthMetrics(d){const income=Number(d.income||0)+Number(d.otherIncome||0);const expenses=(d.expenses||[]).reduce((s,x)=>s+Number(x.amount||0),0);const emis=(d.emis||[]).reduce((s,x)=>s+Number(x.emi||0),0);return {income,expenses,emis,surplus:income-expenses-emis,totalOutflow:expenses+emis}}
+function renderMonthManager(){
+  const keys=Object.keys(monthlyStore.months).sort();
+  const ms=document.getElementById("monthSelect"),cs=document.getElementById("copySourceMonth");
+  ms.innerHTML=keys.map(k=>`<option value="${k}" ${k===activeMonth?"selected":""}>${monthLabel(k)}</option>`).join("");
+  cs.innerHTML=keys.filter(k=>k!==activeMonth).reverse().map(k=>`<option value="${k}">${monthLabel(k)}</option>`).join("") || `<option value="">No other saved month</option>`;
+  document.getElementById("activeMonthBadge").textContent=monthLabel(activeMonth);
+}
+function renderMonthlyAnalysis(){
+  const keys=Object.keys(monthlyStore.months).sort();
+  const rows=keys.map(k=>({k,...monthMetrics(monthlyStore.months[k])}));
+  const cur=monthMetrics(data);const idx=rows.findIndex(r=>r.k===activeMonth);const prev=idx>0?rows[idx-1]:null;
+  const delta=(a,b)=>b===null?"—":money(a-b);
+  document.getElementById("monthlySummary").innerHTML=`<div class="month-stat"><span>Current month outflow</span><b>${money(cur.totalOutflow)}</b></div><div class="month-stat"><span>Current surplus</span><b class="${cur.surplus>=0?"positive":"negative"}">${money(cur.surplus)}</b></div><div class="month-stat"><span>Expense change vs previous</span><b>${delta(cur.expenses,prev?prev.expenses:null)}</b></div><div class="month-stat"><span>EMI change vs previous</span><b>${delta(cur.emis,prev?prev.emis:null)}</b></div>`;
+  const last=rows.slice(-6);const max=Math.max(1,...last.map(r=>r.totalOutflow));
+  document.getElementById("monthlyTrend").innerHTML=last.length?last.map(r=>`<div class="trend-row"><span>${monthLabel(r.k).slice(0,3)}</span><div class="trend-bar"><i style="width:${Math.min(100,r.totalOutflow/max*100)}%"></i></div><b>${money(r.totalOutflow)}</b></div>`).join(""):"";
+  document.getElementById("monthlyTable").innerHTML=`<table><thead><tr><th>Month</th><th>Income</th><th>Expenses</th><th>EMIs</th><th>Surplus</th></tr></thead><tbody>${rows.slice().reverse().map(r=>`<tr class="${r.k===activeMonth?"current-row":""}"><td>${monthLabel(r.k)}</td><td>${money(r.income)}</td><td>${money(r.expenses)}</td><td>${money(r.emis)}</td><td class="${r.surplus>=0?"positive":"negative"}">${money(r.surplus)}</td></tr>`).join("")}</tbody></table>`;
+}
+
 function render(){
+ renderMonthManager();
  const income=Number(data.income)+Number(data.otherIncome);
  const expenses=data.expenses.reduce((s,x)=>s+Number(x.amount),0);
  const emis=data.emis.reduce((s,x)=>s+Number(x.emi),0);
@@ -24,9 +75,12 @@ function render(){
  document.getElementById("savingsRate").textContent=income?Math.max(0,Math.round(surplus/income*100))+"%":"0%";
  document.getElementById("annualSurplus").textContent=money(surplus*12);
  document.getElementById("salary").value=data.income||"";
+ const ac=data.annualCosts||{};
+ ["qSchool","aInsurance","aTravel","aMaintenance","aFestival","aOther"].forEach(id=>{if(document.getElementById(id))document.getElementById(id).value=ac[id]||""});
  document.getElementById("otherIncome").value=data.otherIncome||"";
  renderList("expenseList",data.expenses,(x,i)=>`<div class="list-item"><div class="item-main"><b>${esc(x.desc)}</b><small>${esc(x.cat)}</small></div><span class="amount">${money(x.amount)} <button class="delete" onclick="removeItem('expenses',${i})">×</button></span></div>`);
  renderList("emiList",data.emis,(x,i)=>`<div class="list-item"><div class="item-main"><b>${esc(x.name)}</b><small>${money(x.outstanding)} outstanding · ${x.months||0} months</small></div><span class="amount">${money(x.emi)} <button class="delete" onclick="removeItem('emis',${i})">×</button></span></div>`);
+ renderMonthlyAnalysis();
  renderList("reminderList",data.reminders,(x,i)=>`<div class="list-item"><div class="item-main"><b>${esc(x.name)}</b><small>${x.date}</small></div><button class="delete" onclick="removeItem('reminders',${i})">×</button></div>`);
  const hl=document.getElementById("helpList");hl.classList.toggle("empty",!data.help.length);hl.innerHTML=data.help.length?data.help.map((x,i)=>`<div class="help"><b>${esc(x.name)}</b><span>${esc(x.role)} · ${money(x.salary)}/month · ${x.days} days</span><button class="delete" onclick="removeItem('help',${i})">Remove</button></div>`).join(""):"Add your maid, cook, driver or other household help.";
 }
@@ -49,6 +103,8 @@ setTimeout(()=>{try{updateAdvice()}catch(e){}},0);
 function baseMonthly(){return data.expenses.reduce((s,x)=>s+Number(x.amount),0)+data.emis.reduce((s,x)=>s+Number(x.emi),0)}
 function calculateTrueCost(){
  const quarterly=+document.getElementById("qSchool").value||0;
+ data.annualCosts={qSchool:quarterly,aInsurance:+document.getElementById("aInsurance").value||0,aTravel:+document.getElementById("aTravel").value||0,aMaintenance:+document.getElementById("aMaintenance").value||0,aFestival:+document.getElementById("aFestival").value||0,aOther:+document.getElementById("aOther").value||0};
+ saveStore();
  const annual=[aInsurance,aTravel,aMaintenance,aFestival,aOther].reduce((s,e)=>s+(+e.value||0),0);
  const monthlyAnnual=annual/12, trueMonthly=baseMonthly()+quarterly/3+monthlyAnnual;
  const income=Number(data.income)+Number(data.otherIncome), surplus=income-trueMonthly;

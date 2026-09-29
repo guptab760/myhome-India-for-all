@@ -58,3 +58,5 @@ Official India CPI reference used for the default assumption: July 2026 CPI 4.45
 - Financial Offers: investment, insurance and loan comparison links with profile-based guidance.
 
 - Live Data tab with source links for current lender rates, insurance quotes and investment comparison pages; no hard-coded current rates.
+
+- Monthly Money Journal: month-by-month local storage, expense/liability copy-forward, and expense/EMI trend analysis.

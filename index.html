@@ -25,6 +25,27 @@
     <button class="primary" onclick="openModal('expenseModal')">＋ Add Expense</button>
   </section>
 
+  <section class="card month-manager">
+    <div class="section-title"><div><h3>📅 Monthly Money Journal</h3><p class="muted">Save each month separately, review trends, and copy recurring expenses & liabilities into a new month.</p></div><span class="badge" id="activeMonthBadge">Current month</span></div>
+    <div class="month-controls">
+      <label>Active month<select id="monthSelect" onchange="switchMonth(this.value)"></select></label>
+      <button class="secondary" onclick="saveCurrentMonth()">💾 Save Month</button>
+      <button class="secondary" onclick="createNewMonth()">＋ New Month</button>
+    </div>
+    <div class="copy-controls">
+      <label>Copy recurring data from<select id="copySourceMonth"></select></label>
+      <button class="primary" onclick="copyMonthData()">📋 Copy Expenses & Liabilities</button>
+      <small class="muted">This copies the source month's expense list and loans/EMIs into the active month. Your active month's income remains unchanged.</small>
+    </div>
+  </section>
+
+  <section class="card monthly-analysis">
+    <div class="section-title"><h3>📊 Monthly Expense & Liability Analysis</h3><span class="badge">Saved month by month</span></div>
+    <div id="monthlySummary" class="monthly-summary"></div>
+    <div id="monthlyTrend" class="monthly-trend"></div>
+    <div id="monthlyTable" class="monthly-table-wrap"></div>
+  </section>
+
   <nav class="tabs">
     <button class="tab active" data-tab="home">🏠 MyHome</button>
     <button class="tab" data-tab="finance">💰 Salary & EMI</button>
