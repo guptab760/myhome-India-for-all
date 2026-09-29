@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#1769aa">
+  <meta name="description" content="MyHome India - Home management and Salary & EMI Planner">
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="style.css">
+  <title>MyHome India</title>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand"><div class="logo">⌂</div><div><h1>MyHome India</h1><span>Home & Money Planner</span></div></div>
+  <button class="icon-btn" id="themeBtn" title="Toggle theme">☾</button>
+</header>
+
+<main class="container">
+  <section class="hero">
+    <div>
+      <p class="eyebrow">YOUR HOUSEHOLD DASHBOARD</p>
+      <h2>Know where your money goes.</h2>
+      <p>Track home expenses, domestic help, reminders and EMIs in one simple place.</p>
+    </div>
+    <button class="primary" onclick="openModal('expenseModal')">＋ Add Expense</button>
+  </section>
+
+  <nav class="tabs">
+    <button class="tab active" data-tab="home">🏠 MyHome</button>
+    <button class="tab" data-tab="finance">💰 Salary & EMI</button>
+    <button class="tab" data-tab="decisions">🎯 Life Cost</button>
+    <button class="tab" data-tab="tools">🧮 Tools</button>
+  </nav>
+
+  <section id="home" class="tab-panel active">
+    <div class="grid cards">
+      <div class="card metric"><span>Monthly Income</span><strong id="incomeValue">₹0</strong><small>Set in Salary & EMI</small></div>
+      <div class="card metric"><span>Home Expenses</span><strong id="expenseValue">₹0</strong><small id="expenseCount">0 expenses</small></div>
+      <div class="card metric"><span>Total EMIs</span><strong id="emiValue">₹0</strong><small>Monthly commitments</small></div>
+      <div class="card metric"><span>Monthly Surplus</span><strong id="surplusValue">₹0</strong><small>Income − expenses − EMIs</small></div>
+    </div>
+
+    <div class="grid two">
+      <div class="card">
+        <div class="section-title"><h3>Expense Breakdown</h3><button class="link" onclick="openModal('expenseModal')">Add</button></div>
+        <div id="expenseList" class="list empty">No expenses yet. Add your first expense.</div>
+      </div>
+      <div class="card">
+        <div class="section-title"><h3>Upcoming Reminders</h3><button class="link" onclick="openModal('reminderModal')">Add</button></div>
+        <div id="reminderList" class="list empty">No reminders yet.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-title"><h3>Domestic Help</h3><button class="link" onclick="openModal('helpModal')">Add</button></div>
+      <div id="helpList" class="help-grid empty">Add your maid, cook, driver or other household help.</div>
+    </div>
+  </section>
+
+  <section id="finance" class="tab-panel">
+    <div class="grid two">
+      <div class="card">
+        <div class="section-title"><h3>Income</h3><span class="badge">Monthly</span></div>
+        <label>Take-home salary <input id="salary" type="number" min="0" placeholder="430000"></label>
+        <label>Other monthly income <input id="otherIncome" type="number" min="0" placeholder="0"></label>
+        <button class="primary full" onclick="saveFinance()">Save Income</button>
+      </div>
+      <div class="card">
+        <div class="section-title"><h3>Financial Snapshot</h3></div>
+        <div class="snapshot">
+          <div><span>Total Income</span><b id="snapIncome">₹0</b></div>
+          <div><span>EMI Ratio</span><b id="emiRatio">0%</b></div>
+          <div><span>Savings Rate</span><b id="savingsRate">0%</b></div>
+          <div><span>Annual Surplus</span><b id="annualSurplus">₹0</b></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-title"><h3>Loans & EMIs</h3><button class="link" onclick="openModal('emiModal')">Add EMI</button></div>
+      <div id="emiList" class="list empty">No loans added yet.</div>
+    </div>
+
+    <div class="card">
+      <div class="section-title"><h3>What If? — New Loan Simulator</h3></div>
+      <div class="grid three">
+        <label>Loan amount <input id="simPrincipal" type="number" placeholder="500000"></label>
+        <label>Interest % p.a. <input id="simRate" type="number" step="0.1" placeholder="9"></label>
+        <label>Tenure (months) <input id="simTenure" type="number" placeholder="60"></label>
+      </div>
+      <button class="secondary" onclick="simulateLoan()">Calculate EMI</button>
+      <div id="simResult" class="sim-result">Enter loan details to see the impact.</div>
+    </div>
+  </section>
+
+
+  <section id="decisions" class="tab-panel">
+    <div class="card life-hero">
+      <p class="eyebrow">MYHOME INDIA SIGNATURE FEATURE</p>
+      <h2>Know the true cost of your life.</h2>
+      <p>Turn monthly, quarterly and annual commitments into one clear family-cost picture.</p>
+    </div>
+
+    <div class="grid cards">
+      <div class="card metric"><span>True Monthly Family Cost</span><strong id="trueCost">₹0</strong><small>Regular + annualised commitments</small></div>
+      <div class="card metric"><span>Annualised Cost</span><strong id="annualCost">₹0</strong><small>Estimated household outflow</small></div>
+      <div class="card metric"><span>Cost / Day</span><strong id="dailyCost">₹0</strong><small>True family cost ÷ 30</small></div>
+      <div class="card metric"><span>Financial Buffer</span><strong id="bufferMonths">0 mo</strong><small>Surplus-based indicator</small></div>
+    </div>
+
+    <div class="grid two">
+      <div class="card">
+        <div class="section-title"><h3>True Family Cost</h3><span class="badge">Annual expenses included</span></div>
+        <p class="muted">Add expenses that happen quarterly or annually. MyHome India spreads them across the year so you see their real monthly impact.</p>
+        <div class="grid three">
+          <label>Quarterly school/fee costs<input id="qSchool" type="number" placeholder="0"></label>
+          <label>Annual insurance<input id="aInsurance" type="number" placeholder="0"></label>
+          <label>Annual travel/family events<input id="aTravel" type="number" placeholder="0"></label>
+        </div>
+        <div class="grid three">
+          <label>Annual maintenance/repairs<input id="aMaintenance" type="number" placeholder="0"></label>
+          <label>Annual festivals/gifts<input id="aFestival" type="number" placeholder="0"></label>
+          <label>Other annual costs<input id="aOther" type="number" placeholder="0"></label>
+        </div>
+        <button class="primary full" onclick="calculateTrueCost()">Calculate True Cost</button>
+      </div>
+
+      <div class="card">
+        <div class="section-title"><h3>Family Financial Snapshot</h3></div>
+        <div id="lifeSnapshot" class="snapshot"></div>
+        <p class="muted">This is an informational planning indicator, not financial advice.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-title"><h3>🚀 Can I Afford This?</h3><span class="badge">Decision simulator</span></div>
+      <p class="muted">Test a car, phone, holiday, home appliance or any major purchase before committing.</p>
+      <div class="grid three">
+        <label>Purchase price<input id="affordPrice" type="number" placeholder="500000"></label>
+        <label>Down payment<input id="affordDown" type="number" placeholder="100000"></label>
+        <label>Interest % p.a.<input id="affordRate" type="number" step="0.1" placeholder="9"></label>
+      </div>
+      <div class="grid three">
+        <label>Loan tenure (months)<input id="affordTenure" type="number" placeholder="60"></label>
+        <label>Extra monthly running cost<input id="affordRunning" type="number" placeholder="5000"></label>
+        <label>One-time purchase costs<input id="affordOneTime" type="number" placeholder="10000"></label>
+      </div>
+      <button class="primary" onclick="checkAffordability()">Show Family Impact</button>
+      <div id="affordResult" class="afford-result">Enter the purchase details to see the monthly and annual impact.</div>
+    </div>
+
+    <div class="card">
+      <div class="section-title"><h3>📅 Expensive-Month Planner</h3></div>
+      <p class="muted">Annualised costs help you avoid surprises from school fees, insurance, travel and festivals.</p>
+      <div id="expenseCalendar" class="calendar-grid"></div>
+    </div>
+  </section>
+
+  <section id="tools" class="tab-panel">
+    <div class="grid three">
+      <div class="card tool"><div class="tool-icon">🏠</div><h3>Rent vs Buy</h3><p>Compare monthly rent with estimated home-loan costs.</p><button class="secondary" onclick="openModal('rentModal')">Open Tool</button></div>
+      <div class="card tool"><div class="tool-icon">👩‍🍳</div><h3>Maid Salary</h3><p>Calculate salary after unpaid leave and advances.</p><button class="secondary" onclick="openModal('maidModal')">Open Tool</button></div>
+      <div class="card tool"><div class="tool-icon">🛟</div><h3>Emergency Fund</h3><p>Estimate how many months of expenses your reserve covers.</p><button class="secondary" onclick="openModal('emergencyModal')">Open Tool</button></div>
+    </div>
+    <div class="card">
+      <h3>Privacy-first by design</h3>
+      <p class="muted">This first version stores your data in your browser using local storage. Nothing is sent to a server.</p>
+      <button class="danger-outline" onclick="clearAll()">Clear all local data</button>
+    </div>
+  </section>
+</main>
+
+<div id="toast"></div>
+
+<!-- Modals -->
+<div class="modal" id="expenseModal"><div class="modal-box"><button class="close" onclick="closeModal('expenseModal')">×</button><h3>Add Expense</h3>
+<label>Description<input id="eDesc" placeholder="Groceries"></label><label>Category<select id="eCat"><option>Groceries</option><option>Utilities</option><option>Domestic Help</option><option>School</option><option>Transport</option><option>Home Maintenance</option><option>Insurance</option><option>Other</option></select></label><label>Amount<input id="eAmount" type="number" placeholder="5000"></label><button class="primary full" onclick="addExpense()">Save Expense</button></div></div>
+
+<div class="modal" id="emiModal"><div class="modal-box"><button class="close" onclick="closeModal('emiModal')">×</button><h3>Add EMI</h3>
+<label>Loan name<input id="lName" placeholder="Home Loan"></label><label>Monthly EMI<input id="lEmi" type="number" placeholder="90000"></label><label>Outstanding amount<input id="lOutstanding" type="number" placeholder="10000000"></label><label>Remaining months<input id="lMonths" type="number" placeholder="180"></label><button class="primary full" onclick="addEmi()">Save EMI</button></div></div>
+
+<div class="modal" id="reminderModal"><div class="modal-box"><button class="close" onclick="closeModal('reminderModal')">×</button><h3>Add Reminder</h3>
+<label>Reminder<input id="rName" placeholder="Car insurance"></label><label>Date<input id="rDate" type="date"></label><button class="primary full" onclick="addReminder()">Save Reminder</button></div></div>
+
+<div class="modal" id="helpModal"><div class="modal-box"><button class="close" onclick="closeModal('helpModal')">×</button><h3>Add Domestic Help</h3>
+<label>Name<input id="hName" placeholder="Lakshmi"></label><label>Role<input id="hRole" placeholder="Cook"></label><label>Monthly salary<input id="hSalary" type="number" placeholder="5500"></label><label>Working days/month<input id="hDays" type="number" placeholder="26"></label><button class="primary full" onclick="addHelp()">Save</button></div></div>
+
+<div class="modal" id="maidModal"><div class="modal-box"><button class="close" onclick="closeModal('maidModal')">×</button><h3>Maid Salary Calculator</h3>
+<label>Monthly salary<input id="mSalary" type="number" placeholder="5500"></label><label>Working days/month<input id="mDays" type="number" placeholder="26"></label><label>Unpaid leave days<input id="mLeave" type="number" placeholder="2"></label><label>Advance deducted<input id="mAdvance" type="number" placeholder="0"></label><button class="primary full" onclick="calcMaid()">Calculate</button><div id="maidResult" class="result"></div></div></div>
+
+<div class="modal" id="emergencyModal"><div class="modal-box"><button class="close" onclick="closeModal('emergencyModal')">×</button><h3>Emergency Fund Calculator</h3>
+<label>Monthly essential expenses<input id="efExpenses" type="number" placeholder="100000"></label><label>Current emergency fund<input id="efFund" type="number" placeholder="1000000"></label><label>Target months<input id="efMonths" type="number" placeholder="6"></label><button class="primary full" onclick="calcEmergency()">Calculate</button><div id="efResult" class="result"></div></div></div>
+
+<div class="modal" id="rentModal"><div class="modal-box"><button class="close" onclick="closeModal('rentModal')">×</button><h3>Rent vs Buy — Quick View</h3>
+<label>Monthly rent<input id="rent" type="number" placeholder="35000"></label><label>Home loan EMI<input id="buyEmi" type="number" placeholder="90000"></label><label>Monthly ownership costs<input id="buyCosts" type="number" placeholder="10000"></label><button class="primary full" onclick="calcRent()">Compare</button><div id="rentResult" class="result"></div></div></div>
+
+<script src="app.js"></script>
+</body>
+</html>

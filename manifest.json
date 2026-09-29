@@ -1,0 +1,10 @@
+{
+  "name":"MyHome India",
+  "short_name":"MyHome",
+  "start_url":".",
+  "display":"standalone",
+  "background_color":"#f4f7fb",
+  "theme_color":"#1769aa",
+  "description":"Home management and Salary & EMI Planner for India",
+  "icons":[]
+}
