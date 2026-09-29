@@ -120,13 +120,13 @@ function checkAffordability(){
  const ratio=income?((current+impact)/income*100):0;
  let status, pill, headline;
  if(income<=0){
-   status="yellow"; pill="Needs income data"; headline="Add your monthly income to assess affordability.";
+   status="yellow"; pill="Working — add income data"; headline="Add your monthly income to assess affordability.";
  } else if(newSurplus>=0 && ratio<=40){
-   status="green"; pill="Potentially affordable"; headline=`The purchase leaves an estimated ${money(newSurplus)} monthly surplus.`;
+   status="green"; pill="Good — potentially affordable"; headline=`The purchase leaves an estimated ${money(newSurplus)} monthly surplus.`;
  } else if(newSurplus>=0){
-   status="yellow"; pill="Affordable with limited buffer"; headline=`The purchase leaves an estimated ${money(newSurplus)} monthly surplus, but your monthly cost ratio would be about ${ratio.toFixed(1)}%.`;
+   status="yellow"; pill="Warning — limited buffer"; headline=`The purchase leaves an estimated ${money(newSurplus)} monthly surplus, but your monthly cost ratio would be about ${ratio.toFixed(1)}%.`;
  } else {
-   status="red"; pill="Not affordable from current cash flow"; headline=`You would have an estimated ${money(Math.abs(newSurplus))} monthly shortfall.`;
+   status="red"; pill="Working needed — not affordable yet"; headline=`You would have an estimated ${money(Math.abs(newSurplus))} monthly shortfall.`;
  }
  document.getElementById("affordResult").innerHTML=
  `<span class="status-pill status-${status}">${pill}</span><br><b>${headline}</b><br><br>

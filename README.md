@@ -52,3 +52,5 @@ The app currently stores data in the user's browser using `localStorage`; there 
 - Guidance to prevent lifestyle inflation from absorbing salary increases
 
 Official India CPI reference used for the default assumption: July 2026 CPI 4.45%; food inflation 5.52% (MoSPI/PIB).
+
+- Colorful rupee-themed background and Good / Warning / Working visual status indicators.
