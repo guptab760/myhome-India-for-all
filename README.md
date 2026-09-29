@@ -34,3 +34,11 @@ The app currently stores data in the user's browser using `localStorage`; there 
 - Expensive-month planner
 - "Can I Afford This?" purchase simulator
 - Monthly and annual cash-flow impact
+
+## Affordability logic
+- Estimates whether a purchase leaves positive monthly cash flow.
+- Calculates the resulting household monthly-cost ratio.
+- When cash flow is negative, identifies spending categories from the user's entered expenses and suggests targeted monthly reductions.
+- If the gap remains, suggests changing purchase price/down payment/financing/timing rather than assuming all discretionary expenses can be cut.
+
+- Make It Possible scenario sliders for price, down payment and tenure.

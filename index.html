@@ -147,6 +147,17 @@
       </div>
       <button class="primary" onclick="checkAffordability()">Show Family Impact</button>
       <div id="affordResult" class="afford-result">Enter the purchase details to see the monthly and annual impact.</div>
+      <div id="cutPlan" class="cut-plan"></div>
+      <div id="makePossible" class="make-possible">
+        <h4>🎯 Make It Possible</h4>
+        <p class="muted">Adjust the purchase price, down payment and tenure to find a combination that fits your current cash flow.</p>
+        <div class="grid three">
+          <label>Target purchase price<input id="mpPrice" type="range" min="50000" max="10000000" step="25000" value="500000" oninput="updateMakePossible()"><output id="mpPriceOut">₹5,00,000</output></label>
+          <label>Down payment %<input id="mpDown" type="range" min="0" max="80" step="5" value="20" oninput="updateMakePossible()"><output id="mpDownOut">20%</output></label>
+          <label>Loan tenure<input id="mpTenure" type="range" min="12" max="120" step="12" value="60" oninput="updateMakePossible()"><output id="mpTenureOut">60 months</output></label>
+        </div>
+        <div id="makePossibleResult" class="make-result"></div>
+      </div>
     </div>
 
     <div class="card">

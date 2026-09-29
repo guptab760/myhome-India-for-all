@@ -64,12 +64,126 @@ function renderLifeCalendar(quarterly,annual){
  const max=Math.max(...vals), min=Math.min(...vals);
  document.getElementById("expenseCalendar").innerHTML=vals.map((v,i)=>`<div class="month-card ${v===max?"highlight":""}"><b>${months[i]}</b><span>${money(v)}</span><small>${v===max?"Higher-cost month":"Estimated family cost"}</small></div>`).join("")+`<div class="calendar-note">Highest estimated month: ${months[vals.indexOf(max)]} at ${money(max)}. This simple planner spreads annual costs evenly and places quarterly costs in every third month.</div>`;
 }
+function getCutSuggestions(requiredSaving){
+  const cats={};
+  data.expenses.forEach(x=>{
+    const amount=Number(x.amount)||0;
+    const cat=x.cat||"Other";
+    cats[cat]=(cats[cat]||0)+amount;
+  });
+  const priorities=[
+    ["Entertainment",0.35,"Review entertainment, streaming and discretionary spending"],
+    ["Dining",0.30,"Reduce eating out, food delivery and discretionary dining"],
+    ["Transport",0.20,"Review cab, fuel and discretionary travel costs"],
+    ["Shopping",0.25,"Reduce non-essential shopping and impulse purchases"],
+    ["Subscriptions",0.50,"Review unused subscriptions and recurring services"],
+    ["Other",0.20,"Review miscellaneous and non-essential spending"],
+    ["Groceries",0.10,"Optimise grocery purchases, brands and food waste"],
+    ["Home Maintenance",0.10,"Defer or negotiate non-urgent home maintenance where practical"]
+  ];
+  let suggestions=[];
+  priorities.forEach(([cat,rate,text])=>{
+    if(cats[cat]>0){
+      const saving=Math.round(cats[cat]*rate);
+      if(saving>0)suggestions.push({cat,saving,text,base:cats[cat]});
+    }
+  });
+  const sorted=suggestions.sort((a,b)=>b.saving-a.saving);
+  let remaining=requiredSaving;
+  const selected=[];
+  for(const s of sorted){
+    if(remaining<=0)break;
+    const target=Math.min(s.saving,remaining);
+    selected.push({...s,saving:target});
+    remaining-=target;
+  }
+  if(remaining>0){
+    const emiExpenses=data.emis.reduce((s,x)=>s+Number(x.emi||0),0);
+    if(emiExpenses>0){
+      selected.push({cat:"Loans / EMIs",saving:remaining,text:"Consider extending the purchase timeline or evaluating loan prepayment/refinancing options before adding another EMI. Do not increase debt solely to meet the target.",base:emiExpenses});
+      remaining=0;
+    }
+  }
+  return {selected,remaining};
+}
+
 function checkAffordability(){
  const price=+affordPrice.value||0, down=+affordDown.value||0, annual=+affordRate.value||0, n=+affordTenure.value||0, running=+affordRunning.value||0, one=+affordOneTime.value||0;
  const p=Math.max(0,price-down), r=annual/1200;
  const emi=r&&n?p*r*Math.pow(1+r,n)/(Math.pow(1+r,n)-1):(n?p/n:0);
- const income=Number(data.income)+Number(data.otherIncome), current=baseMonthly(), currentSurplus=income-current, newSurplus=currentSurplus-emi-running;
- const currentTrue=baseMonthly(), newTrue=currentTrue+emi+running;
+ const income=Number(data.income)+Number(data.otherIncome), current=baseMonthly(), currentSurplus=income-current;
+ const impact=emi+running, newSurplus=currentSurplus-impact, newTrue=current+impact;
+ const oneTimeCash=Math.max(0,down)+one;
+ const targetBuffer=Math.max(0,impact-currentSurplus);
+ const ratio=income?((current+impact)/income*100):0;
+ let status, pill, headline;
+ if(income<=0){
+   status="yellow"; pill="Needs income data"; headline="Add your monthly income to assess affordability.";
+ } else if(newSurplus>=0 && ratio<=40){
+   status="green"; pill="Potentially affordable"; headline=`The purchase leaves an estimated ${money(newSurplus)} monthly surplus.`;
+ } else if(newSurplus>=0){
+   status="yellow"; pill="Affordable with limited buffer"; headline=`The purchase leaves an estimated ${money(newSurplus)} monthly surplus, but your monthly cost ratio would be about ${ratio.toFixed(1)}%.`;
+ } else {
+   status="red"; pill="Not affordable from current cash flow"; headline=`You would have an estimated ${money(Math.abs(newSurplus))} monthly shortfall.`;
+ }
+ document.getElementById("affordResult").innerHTML=
+ `<span class="status-pill status-${status}">${pill}</span><br><b>${headline}</b><br><br>
+ <b>Estimated EMI:</b> ${money(emi)}<br>
+ <b>Running cost:</b> ${money(running)}/month<br>
+ <b>Additional monthly impact:</b> ${money(impact)}<br>
+ <b>New true monthly cost:</b> ${money(newTrue)}<br>
+ <b>Current monthly surplus:</b> ${money(currentSurplus)}<br>
+ <b>After purchase:</b> <span class="${newSurplus>=0?"positive":"negative"}">${money(newSurplus)}</span><br>
+ <b>Estimated monthly cost ratio:</b> ${ratio.toFixed(1)}%<br>
+ <b>One-time cash needed:</b> ${money(oneTimeCash)}<br>
+ <b>Annual cash-flow impact:</b> ${money(impact*12)}`;
+
+ const plan=document.getElementById("cutPlan");
+ if(newSurplus>=0){
+   plan.innerHTML=`<h4>💡 Expense-cutting suggestions</h4><div>You don't need to cut expenses based on the current numbers. If you want a bigger safety buffer, review your largest discretionary categories below.</div>`;
+ }else{
+   const needed=Math.abs(newSurplus);
+   const {selected,remaining}=getCutSuggestions(needed);
+   let html=`<h4>✂️ How could you make this purchase possible?</h4>
+   <div>You need to free up approximately <span class="saving">${money(needed)}/month</span> to keep your current monthly cash flow from going negative.</div>`;
+   if(selected.length){
+     html+=`<ul>${selected.map(s=>`<li><b>${esc(s.cat)} — target ${money(s.saving)}/month:</b> ${esc(s.text)}. Current ${esc(s.cat).toLowerCase()} spend: ${money(s.base)}/month.</li>`).join("")}</ul>`;
+   }
+   if(remaining>0){
+     html+=`<p><b>Remaining gap:</b> ${money(remaining)}/month. Consider reducing the purchase price, increasing the down payment, choosing a longer/less expensive financing option, or delaying the purchase.</p>`;
+   }else{
+     html+=`<p><b>Potential target:</b> The suggestions above are designed to close the estimated monthly gap. They are not guarantees and should be reviewed against your actual priorities.</p>`;
+   }
+   plan.innerHTML=html;
+ }
+}
+
+function updateMakePossible(){
+ const price=+document.getElementById("mpPrice").value||0;
+ const downPct=+document.getElementById("mpDown").value||0;
+ const n=+document.getElementById("mpTenure").value||60;
+ const rate=(+document.getElementById("affordRate").value||9)/1200;
+ const income=Number(data.income)+Number(data.otherIncome);
+ const current=baseMonthly();
+ const surplus=income-current;
+ const down=price*downPct/100;
+ const principal=Math.max(0,price-down);
+ const emi=rate&&n?principal*rate*Math.pow(1+rate,n)/(Math.pow(1+rate,n)-1):(n?principal/n:0);
+ const running=+document.getElementById("affordRunning").value||0;
  const impact=emi+running;
- document.getElementById("affordResult").innerHTML=`<div class="big">${money(impact)}/month additional impact</div><b>Estimated EMI:</b> ${money(emi)}<br><b>Running cost:</b> ${money(running)} / month<br><b>New true monthly cost:</b> ${money(newTrue)}<br><b>Current monthly surplus:</b> ${money(currentSurplus)}<br><b>After purchase:</b> <span class="${newSurplus>=0?"positive":"negative"}">${money(newSurplus)}</span><br><b>One-time cash needed:</b> ${money(Math.max(0,down)+one)}<br><b>Annual cash-flow impact:</b> ${money(impact*12)}<br><br>${newSurplus>=0?`The purchase leaves an estimated ${money(newSurplus)} monthly surplus based on the information entered.`:`The purchase would exceed the current estimated monthly surplus by ${money(Math.abs(newSurplus))}.`}`;
+ const after=surplus-impact;
+ document.getElementById("mpPriceOut").textContent=money(price);
+ document.getElementById("mpDownOut").textContent=downPct+"%";
+ document.getElementById("mpTenureOut").textContent=n+" months";
+ const status=after>=0?"🟢 Fits current cash flow":"🔴 Still above current cash flow";
+ document.getElementById("makePossibleResult").innerHTML=`
+   <b>${status}</b>
+   <div class="scenario-grid">
+     <div class="scenario"><small>Estimated EMI</small><b>${money(emi)}</b></div>
+     <div class="scenario"><small>Monthly impact</small><b>${money(impact)}</b></div>
+     <div class="scenario"><small>Surplus after purchase</small><b class="${after>=0?"positive":"negative"}">${money(after)}</b></div>
+   </div>
+   <p>${after>=0
+     ? "This scenario fits the current monthly cash-flow model. Keep a safety buffer rather than using the entire surplus."
+     : "This scenario does not fit yet. Try increasing the down payment, extending tenure, reducing the purchase price, or use the expense-cutting suggestions above."}</p>`;
 }
